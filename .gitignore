@@ -33,3 +33,6 @@
 
 # Microsoft temp files
 ~*.*
+
+# VS code settings
+.vscode/
