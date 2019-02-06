@@ -19,11 +19,18 @@ void setup(){
 
     Serial.begin(9600);
     noInterrupts();
+    
+    TCCR4A =  0B00000000;
+    TCCR4B =  0B01000100; // Enable Input Capture Rising Edge - NO prescaler
 
-    leftEncoder->init();
-    rightEncoder->init();
+    TIMSK4 =  0B00100001; // Interrupt on Timer 4 overflow and input capture
+    
+    TCNT4 =   0;          // Set counter to zero
 
     interrupts();
+    
+    leftEncoder->init();
+    rightEncoder->init();
 
 };
 
