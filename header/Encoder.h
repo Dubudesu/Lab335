@@ -1,6 +1,7 @@
 #ifndef Encoder_h
 #define Encoder_h
 
+#include <Arduino.h>
 
 class Encoder {
 private:

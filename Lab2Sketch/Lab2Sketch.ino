@@ -1,7 +1,7 @@
 #define ENCODER_SLOTS       20
 #define WHEEL_DIAMETER      65  //mm
-#define LEFT_ENCODER_PIN    49    
-#define RIGHT_ENCODER_PIN   48
+#define LEFT_ENCODER_PIN    49  //ICP4  
+#define RIGHT_ENCODER_PIN   48  //ICP5
 
 volatile bool timer4_capt_flag = false;
 volatile bool timer4_over_flag = false;
@@ -17,18 +17,16 @@ Encoder *rightEncoder   = new Encoder(ENCODER_SLOTS, WHEEL_DIAMETER, RIGHT_ENCOD
 
 void setup(){
 
-    Serial.begin(9600);
+    Serial.begin(115200);
+    Serial.print("Encoder initializing..");
     noInterrupts();
     
     TCCR4A =  0B00000000;
-    TCCR4B =  0B01000100; // Enable Input Capture Rising Edge - NO prescaler
-
+    TCCR4B =  0B01000100; // Enable Input Capture Rising Edge - 256 prescaler = 16us per tick
     TIMSK4 =  0B00100001; // Interrupt on Timer 4 overflow and input capture
-    
     TCNT4 =   0;          // Set counter to zero
 
     interrupts();
-    
     leftEncoder->init();
     rightEncoder->init();
 
@@ -37,19 +35,23 @@ void setup(){
 void loop(){
 
     if(timer4_capt_flag){
-       // int speed4 = leftEncoder->updateTime(ICR4);
+        
+        leftEncoder->updateTime(ICR4);
         timer4_capt_flag = false;
         timer4_over_flag = false;
-        Serial.print("Encoder4!");
+        Serial.print("Current speed: !");
+        Serial.print(leftEncoder->getSpeed());
+        Serial.print("\n");
+        
     }
     if(timer5_capt_flag){
+        rightEncoder->updateTime(ICR4);
         timer5_capt_flag = false;
         timer5_over_flag = false;
-        Serial.print("Encoder5!");
+        Serial.print("Current speed: !");
+        Serial.print(rightEncoder->getSpeed());
+        Serial.print("\n");
     }
-
-Serial.print("loop running");
-//delay(1000);
 
 };
 
@@ -58,10 +60,20 @@ Serial.print("loop running");
 ISR(TIMER4_CAPT_vect){
     timer4_capt_flag = true;
     timer4_over_flag = false;
-    Serial.print("a43e2f");
+}
+ISR(TIMER4_OVF_vect){
+  if(timer4_over_flag){
+    leftEncoder->zeroSpeed(&Serial);
+  }
+  timer4_over_flag = 1;
 }
 ISR(TIMER5_CAPT_vect){
     timer5_capt_flag = true;
     timer5_over_flag = false;
-    Serial.print("a43e2f");
+}
+ISR(TIMER5_OVF_vect){
+  if(timer5_over_flag){
+    rightEncoder->zeroSpeed(&Serial);
+  }
+  timer5_over_flag = 1;
 }
