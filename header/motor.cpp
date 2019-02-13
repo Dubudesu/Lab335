@@ -11,7 +11,7 @@ Motor::Motor(Adafruit_MotorShield *AFMSptr, unsigned int motorNumber, bool polar
 
 // FORWARD 1, BACKWARD 2, BRAKE 3, RELEASE 4, #defined in Adafruit motor library
 
-void Motor::driveCmd(dutyCycle, unsigned int command) {
+void Motor::driveCmd(unsigned int dutyCycle, unsigned int command) {
     
     _dutyCycle  = dutyCycle; // PWM duty cycle on a 0-255 scale
     _command    = command;

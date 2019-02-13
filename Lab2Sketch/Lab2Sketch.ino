@@ -1,3 +1,5 @@
+#include <Adafruit_MotorShield.h>
+
 #define ENCODER_SLOTS       20
 #define WHEEL_DIAMETER      65  //mm
 #define LEFT_ENCODER_PIN    49  //ICP4  
@@ -63,7 +65,7 @@ ISR(TIMER4_CAPT_vect){
 }
 ISR(TIMER4_OVF_vect){
   if(timer4_over_flag){
-    leftEncoder->zeroSpeed(&Serial);
+    leftEncoder->zeroSpeed();
   }
   timer4_over_flag = 1;
 }
@@ -73,7 +75,7 @@ ISR(TIMER5_CAPT_vect){
 }
 ISR(TIMER5_OVF_vect){
   if(timer5_over_flag){
-    rightEncoder->zeroSpeed(&Serial);
+    rightEncoder->zeroSpeed();
   }
   timer5_over_flag = 1;
 }
