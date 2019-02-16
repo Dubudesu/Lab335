@@ -1,7 +1,7 @@
 #include "motor.h"
 #include <Adafruit_MotorShield.h>
 
-Motor::Motor(Adafruit_MotorShield *AFMSptr, unsigned int motorNumber, bool polarity) {
+Motor::Motor(Adafruit_MotorShield *AFMSptr, byte motorNumber, bool polarity) {
     _motorNumber   = motorNumber;
     _polarity      = polarity;
     _AFMotor       = AFMSptr->getMotor(motorNumber);
