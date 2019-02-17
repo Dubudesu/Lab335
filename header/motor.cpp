@@ -1,4 +1,4 @@
-#include "motor.h"
+#include "Motor.h"
 #include <Adafruit_MotorShield.h>
 
 Motor::Motor(Adafruit_MotorShield *AFMSptr, byte motorNumber, bool polarity) {
