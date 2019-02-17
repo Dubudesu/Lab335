@@ -56,24 +56,34 @@ void setup(){
 
 void loop(){
 
-    if(timer4_capt_flag){
-        
-        leftEncoder->updateTime(ICR4);
-        timer4_capt_flag = false;
-        timer4_over_flag = false;
-        Serial.print("Current speed: !");
-        Serial.print(leftEncoder->getSpeed());
-        Serial.print("\n");
-        
-    }
-    if(timer5_capt_flag){
-        rightEncoder->updateTime(ICR4);
-        timer5_capt_flag = false;
-        timer5_over_flag = false;
-        Serial.print("Current speed: !");
-        Serial.print(rightEncoder->getSpeed());
-        Serial.print("\n");
-    }
+// send drive commands to each motor
+// variables to set speed and direction for easy change between tests
+// FORWARD 1, BACKWARD 2, BRAKE 3, RELEASE 4, #defined in Adafruit motor library
+  static unsigned int dir = 1;
+  static unsigned int spd = 50;
+  lfMotor->driveCmd(spd, dir);
+  lrMotor->driveCmd(spd, dir);
+  rfMotor->driveCmd(spd, dir);
+  rrMotor->driveCmd(spd, dir);
+
+  if(timer4_capt_flag){
+      
+      leftEncoder->updateTime(ICR4);
+      timer4_capt_flag = false;
+      timer4_over_flag = false;
+      Serial.print("Current speed: !");
+      Serial.print(leftEncoder->getSpeed());
+      Serial.print("\n");
+      
+  }
+  if(timer5_capt_flag){
+      rightEncoder->updateTime(ICR4);
+      timer5_capt_flag = false;
+      timer5_over_flag = false;
+      Serial.print("Current speed: !");
+      Serial.print(rightEncoder->getSpeed());
+      Serial.print("\n");
+  }
 
 }
 
