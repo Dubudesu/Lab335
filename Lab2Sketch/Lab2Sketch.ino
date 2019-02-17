@@ -35,15 +35,6 @@ void setup(){
   Serial.begin(115200);
   Serial.print("Encoder initializing..");
   noInterrupts();
-  
-  TCCR4A =  0B00000000;
-  TCCR4B =  0B01000100; // Enable Input Capture Rising Edge - 256 prescaler = 16us per tick
-  TIMSK4 =  0B00100001; // Interrupt on Timer 4 overflow and input capture
-  TCNT4 =   0;          // Set counter to zero
-
-    Serial.begin(115200);
-    Serial.print("Encoder initializing..");
-    noInterrupts();
     
     //PIN 49
     TCCR4A =  0B00000000;
@@ -60,7 +51,7 @@ void setup(){
     interrupts();
     leftEncoder->init();
     rightEncoder->init();
-    
+
   // Motor instantiation syntax: Motor(AFMS, motorNumber, polarity)
   lfMotor = new Motor(&AFMS, 1, POLARITY_LF);
   lrMotor = new Motor(&AFMS, 2, POLARITY_LR);
