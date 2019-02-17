@@ -60,7 +60,7 @@ void loop(){
 // variables to set speed and direction for easy change between tests
 // FORWARD 1, BACKWARD 2, BRAKE 3, RELEASE 4, #defined in Adafruit motor library
   static unsigned int dir = 1;
-  static unsigned int spd = 50;
+  static unsigned int spd = 100;
   lfMotor->driveCmd(spd, dir);
   lrMotor->driveCmd(spd, dir);
   rfMotor->driveCmd(spd, dir);
