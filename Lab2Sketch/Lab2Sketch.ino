@@ -21,10 +21,17 @@ void setup(){
     Serial.print("Encoder initializing..");
     noInterrupts();
     
+    //PIN 49
     TCCR4A =  0B00000000;
     TCCR4B =  0B01000100; // Enable Input Capture Rising Edge - 256 prescaler = 16us per tick
     TIMSK4 =  0B00100001; // Interrupt on Timer 4 overflow and input capture
     TCNT4 =   0;          // Set counter to zero
+
+    //PIN 48
+    TCCR5A =  0B00000000;
+    TCCR5B =  0B01000100; // Enable Input Capture Rising Edge - 256 prescaler = 16us per tick
+    TIMSK5 =  0B00100001; // Interrupt on Timer 4 overflow and input capture
+    TCNT5 =   0;          // Set counter to zero
 
     interrupts();
     leftEncoder->init();
@@ -39,7 +46,7 @@ void loop(){
         leftEncoder->updateTime(ICR4);
         timer4_capt_flag = false;
         timer4_over_flag = false;
-        Serial.print("Current speed: !");
+        Serial.print("Current speed: ");
         Serial.print(leftEncoder->getSpeed());
         Serial.print("\n");
         
@@ -48,7 +55,7 @@ void loop(){
         rightEncoder->updateTime(ICR4);
         timer5_capt_flag = false;
         timer5_over_flag = false;
-        Serial.print("Current speed: !");
+        Serial.print("Current speed: ");
         Serial.print(rightEncoder->getSpeed());
         Serial.print("\n");
     }
@@ -67,6 +74,7 @@ ISR(TIMER4_OVF_vect){
   }
   timer4_over_flag = 1;
 }
+
 ISR(TIMER5_CAPT_vect){
     timer5_capt_flag = true;
     timer5_over_flag = false;
