@@ -33,7 +33,7 @@ Motor *rrMotor;
 void setup(){
   AFMS.begin();
   Serial.begin(115200);
-  Serial.print("Encoder initializing..");
+  Serial.println("Encoder initializing..");
   noInterrupts();
     
     //PIN 49
@@ -65,7 +65,7 @@ void loop(){
 // send drive commands to each motor
 // variables to set speed and direction for easy change between tests
 // FORWARD 1, BACKWARD 2, BRAKE 3, RELEASE 4, #defined in Adafruit motor library
-  static unsigned int dir = 1;
+  static unsigned int dir = 2;
   static unsigned int spd = 100;
   lfMotor->driveCmd(spd, dir);
   lrMotor->driveCmd(spd, dir);
@@ -77,7 +77,7 @@ void loop(){
       leftEncoder->updateTime(ICR4);
       timer4_capt_flag = false;
       timer4_over_flag = false;
-      Serial.print("Current speed: !");
+      Serial.print("Current speed left: ");
       Serial.print(leftEncoder->getSpeed());
       Serial.print("\n");
       
@@ -86,7 +86,7 @@ void loop(){
       rightEncoder->updateTime(ICR4);
       timer5_capt_flag = false;
       timer5_over_flag = false;
-      Serial.print("Current speed: !");
+      Serial.print("Current speed right: !");
       Serial.print(rightEncoder->getSpeed());
       Serial.print("\n");
   }
