@@ -1,7 +1,7 @@
 #include "Encoder.h"
 #include <Arduino.h>
 
-#define COUNT_MAX   65536
+#define COUNT_MAX   65535
 
 Encoder::Encoder(unsigned int slots, unsigned int diameter, unsigned int pin) {
 	_speed             = 0.0;
@@ -11,28 +11,32 @@ Encoder::Encoder(unsigned int slots, unsigned int diameter, unsigned int pin) {
     _slots             = slots;
 	_diameter          = diameter;
   	_pin			   = pin;
-    _tick              = 0.000016; //seconds per tick at 256 prescaller
+    _tick              = 0.000004; //seconds per tick at 64 prescaller
+    _degreePerSlot     = 360/_slots;
+    _mmPerDegree       = (PI*_diameter)/360;
 }
 
 //call on interupt flag with time
-void Encoder::updateTime(unsigned int time) {
+double Encoder::updateTime(unsigned int time) {
 	
     //previous and current time samples
     _prevTime = _currentTime;
 	_currentTime = time;
 
 	// Compute _speed and handle Timer Overflow
-    unsigned int timediff = 0;
-    
+    unsigned long timediff = 0;
     //Check for overflow between samples, and compensate if needed
-    if(_currentTime >= _prevTime){
+   if(_currentTime >= _prevTime){
         timediff = _currentTime - _prevTime;
-    }else{
-        timediff = (_currentTime + COUNT_MAX) - _prevTime;
     }
+     else {
+        timediff = (_currentTime + COUNT_MAX) - _prevTime;
+     }
 
     //calculate linear speed in mm/s
-    _speed = ((360/_slots)/(timediff*_tick))*((PI*_diameter)/360) ;
+    _speed = ((_degreePerSlot)/(timediff*_tick))*(_mmPerDegree) ;
+
+    return(_speed);
 }
 
 double Encoder::getSpeed() {

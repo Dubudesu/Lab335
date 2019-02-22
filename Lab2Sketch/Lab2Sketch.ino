@@ -9,16 +9,18 @@
 #define POLARITY_LR         0
 #define POLARITY_RR         0
 
+
+#include <Wire.h>
+#include <Encoder.h>
+#include <Motor.h>
+#include <Adafruit_MotorShield.h>
+
 volatile bool timer4_capt_flag = false;
 volatile bool timer4_over_flag = false;
 volatile bool timer5_capt_flag = false;
 volatile bool timer5_over_flag = false;
 
 
-#include <Wire.h>
-#include <Encoder.h>
-#include <Motor.h>
-#include <Adafruit_MotorShield.h>
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 
@@ -33,20 +35,22 @@ Motor *rrMotor;
 void setup(){
   AFMS.begin();
   Serial.begin(115200);
-  Serial.println("Encoder initializing..");
+  Serial.println("Encoder initializing...");
   noInterrupts();
     
     //PIN 49
-    TCCR4A =  0B00000000;
-    TCCR4B =  0B01000100; // Enable Input Capture Rising Edge - 256 prescaler = 16us per tick
-    TIMSK4 =  0B00100001; // Interrupt on Timer 4 overflow and input capture
-    TCNT4 =   0;          // Set counter to zero
+    TCCR4A = 0;
+    TCCR4B = B11000011; // Enable Input Capture Rising Edge - 256 prescaler = 16us per tick
+    TCCR4C = 0;
+    TIMSK4 = B00100001; // Interrupt on Timer 4 overflow and input capture
+    TCNT4 =  0;          // Set counter to zero
 
     //PIN 48
-    TCCR5A =  0B00000000;
-    TCCR5B =  0B01000100; // Enable Input Capture Rising Edge - 256 prescaler = 16us per tick
-    TIMSK5 =  0B00100001; // Interrupt on Timer 4 overflow and input capture
-    TCNT5 =   0;          // Set counter to zero
+    TCCR5A = 0;
+    TCCR5B = B11000011; // Enable Input Capture Rising Edge - 256 prescaler = 16us per tick
+    TCCR5C = 0;
+    TIMSK5 = B00100001; // Interrupt on Timer 4 overflow and input capture
+    TCNT5 =  0;          // Set counter to zero
 
     interrupts();
     leftEncoder->init();
@@ -62,31 +66,38 @@ void setup(){
 
 void loop(){
 
-// send drive commands to each motor
-// variables to set speed and direction for easy change between tests
+// send drive commands to each motor for simple motor run and speed feedback test
 // FORWARD 1, BACKWARD 2, BRAKE 3, RELEASE 4, #defined in Adafruit motor library
+
+static bool runningMotor = false;
+
+if(!runningMotor) {
   static unsigned int dir = 2;
-  static unsigned int spd = 100;
+  static unsigned int spd = 127;
   lfMotor->driveCmd(spd, dir);
   lrMotor->driveCmd(spd, dir);
   rfMotor->driveCmd(spd, dir);
   rrMotor->driveCmd(spd, dir);
 
+  runningMotor = true;
+}
+
   if(timer4_capt_flag){
-      
-      leftEncoder->updateTime(ICR4);
       timer4_capt_flag = false;
-      timer4_over_flag = false;
+      timer4_over_flag = false;    
+      leftEncoder->updateTime(ICR4);  
+    
       Serial.print("Current speed left: ");
       Serial.print(leftEncoder->getSpeed());
       Serial.print("\n");
       
   }
   if(timer5_capt_flag){
-      rightEncoder->updateTime(ICR4);
+      rightEncoder->updateTime(ICR5);
       timer5_capt_flag = false;
       timer5_over_flag = false;
-      Serial.print("Current speed right: !");
+
+      Serial.print("Current speed right: ");
       Serial.print(rightEncoder->getSpeed());
       Serial.print("\n");
   }
