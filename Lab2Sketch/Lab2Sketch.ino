@@ -20,8 +20,6 @@ volatile bool timer4_over_flag = false;
 volatile bool timer5_capt_flag = false;
 volatile bool timer5_over_flag = false;
 
-
-
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 
 Encoder *leftEncoder    = new Encoder(ENCODER_SLOTS, WHEEL_DIAMETER, LEFT_ENCODER_PIN);
@@ -38,16 +36,16 @@ void setup(){
   Serial.println("Encoder initializing...");
   noInterrupts();
     
-    //PIN 49
+    //PIN 49 - ICP4
     TCCR4A = 0;
-    TCCR4B = B11000011; // Enable Input Capture Rising Edge - 256 prescaler = 16us per tick
+    TCCR4B = B11000100; // Enable Input Capture Rising Edge - 256 prescaler = 16us per tick
     TCCR4C = 0;
     TIMSK4 = B00100001; // Interrupt on Timer 4 overflow and input capture
     TCNT4 =  0;          // Set counter to zero
 
-    //PIN 48
+    //PIN 48 - ICP5
     TCCR5A = 0;
-    TCCR5B = B11000011; // Enable Input Capture Rising Edge - 256 prescaler = 16us per tick
+    TCCR5B = B11000100; // Enable Input Capture Rising Edge - 256 prescaler = 16us per tick
     TCCR5C = 0;
     TIMSK5 = B00100001; // Interrupt on Timer 4 overflow and input capture
     TCNT5 =  0;          // Set counter to zero
@@ -65,23 +63,19 @@ void setup(){
 }
 
 void loop(){
-
 // send drive commands to each motor for simple motor run and speed feedback test
 // FORWARD 1, BACKWARD 2, BRAKE 3, RELEASE 4, #defined in Adafruit motor library
-
-static bool runningMotor = false;
-
-if(!runningMotor) {
-  static unsigned int dir = 2;
-  static unsigned int spd = 127;
-  lfMotor->driveCmd(spd, dir);
-  lrMotor->driveCmd(spd, dir);
-  rfMotor->driveCmd(spd, dir);
-  rrMotor->driveCmd(spd, dir);
-
-  runningMotor = true;
-}
-
+  static bool runningMotor = false;
+  if(!runningMotor) {
+    static unsigned int dir = 2;
+    static unsigned int spd = 127;
+    lfMotor->driveCmd(spd, dir);
+    lrMotor->driveCmd(spd, dir);
+    rfMotor->driveCmd(spd, dir);
+    rrMotor->driveCmd(spd, dir);
+  
+    runningMotor = true;
+  }
   if(timer4_capt_flag){
       timer4_capt_flag = false;
       timer4_over_flag = false;    
@@ -101,10 +95,7 @@ if(!runningMotor) {
       Serial.print(rightEncoder->getSpeed());
       Serial.print("\n");
   }
-
 }
-
-//ISR's here
 
 ISR(TIMER4_CAPT_vect){
     timer4_capt_flag = true;
@@ -114,7 +105,7 @@ ISR(TIMER4_OVF_vect){
   if(timer4_over_flag){
     leftEncoder->zeroSpeed();
   }
-  timer4_over_flag = 1;
+  timer4_over_flag = true;
 }
 
 ISR(TIMER5_CAPT_vect){
@@ -125,5 +116,8 @@ ISR(TIMER5_OVF_vect){
   if(timer5_over_flag){
     rightEncoder->zeroSpeed();
   }
-  timer5_over_flag = 1;
+  timer5_over_flag = true;
 }
+
+
+
