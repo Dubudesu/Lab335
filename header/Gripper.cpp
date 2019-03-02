@@ -30,7 +30,7 @@ void Gripper::close() {                     // close the gripper
         return;
     }
     else {
-        _gripper->write(CLOSE_ANGLE);       close gripper to the defined CLOSE_ANGLE
+        _gripper->write(CLOSE_ANGLE);       // close gripper to the defined CLOSE_ANGLE
         _posn = CLOSE_POSN;
     }
 

@@ -1,7 +1,7 @@
 #ifndef Gripper_h
 #define Gripper_h
 
-#include <MegaServo.h>
+#include <Servo.h>
 
 class Gripper {
     private:
