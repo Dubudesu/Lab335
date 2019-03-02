@@ -5,11 +5,11 @@
 
 class LineSensor {
     private:
-        unsigned int _pin;
+        int _pin;
 
     public:
-        LineSensor(unsigned int pin);
-		bool getStatus();
+        LineSensor(int pin);
+		int getStatus();
 };
 
 #endif

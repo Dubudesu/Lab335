@@ -1,10 +1,11 @@
 #include "LineSensor.h"
 #include <Arduino.h>
 
-LineSensor::LineSensor(unsigned int pin){
+LineSensor::LineSensor(int pin){
+    _pin = pin;
     pinMode(_pin, INPUT);
 }
 
-bool LineSensor::getStatus(){
+int LineSensor::getStatus(){
 	return digitalRead(_pin);
 }
