@@ -11,8 +11,8 @@ Encoder::Encoder(unsigned int slots, unsigned int diameter, unsigned int pin) {
     _slots             = slots;
     _diameter          = diameter;
     _pin			   = pin;
-    _tick              = 0.000016;                          //seconds per tick at 256 prescaller
-    _mmPerSlot         = (350/_slots)*((PI*_diameter)/360)  // (degrees per slot) * (mm per degree)
+    _tick              = 0.000004;                          //seconds per tick at 64 prescaller
+    _mmPerSlot         = (350/_slots)*((PI*_diameter)/360);  // (degrees per slot) * (mm per degree)
 }
 
 //call on interupt flag with time

@@ -15,14 +15,17 @@ SpeedControl::SpeedControl(HardwareSerial *port, Encoder *encoder, Motor *motor1
     _currentSpeed       = 0.0;
     _prevSpeed          = 0.0;
 
+    _direction          = FORWARD;
+
     //control variables
-    _gainIntegral       = 3.3;
+    _gainIntegral       = 0.033;
     _gainProportional   = 0.0167;
     _integratorLimit    = 0.5; 
 }
 
-void SpeedControl::setSpeed(double speed){
+void SpeedControl::setSpeed(double speed, int direction){
     _setPoint       = speed;
+    _direction      = direction;
 }
 
 double SpeedControl::getspeed(){
@@ -42,6 +45,7 @@ void SpeedControl::update(){
     _prevSpeed = _currentSpeed;
     _currentSpeed = _encoder->getSpeed();
 
+    
     //calculate error
     _error = _currentSpeed - _setPoint;
     _errorIntegral += _error*_sampleTime;
@@ -54,6 +58,11 @@ void SpeedControl::update(){
     double iTerm = _gainIntegral*_errorIntegral;
 
     double newDrive = -(iTerm + pTerm);
+    
+    _serialPort->print("iTerm: ");
+    _serialPort->println(iTerm);
+    _serialPort->print("pTerm: ");
+    _serialPort->println(pTerm);
     newDrive = 255.0*newDrive;
 
     newDrive = (newDrive < 0.0) ? 0.0 : newDrive;
@@ -65,8 +74,8 @@ void SpeedControl::update(){
             _motor2->driveCmd( 0, RELEASE);
         }
         else{
-            _motor1->driveCmd( (int)newDrive, FORWARD);
-            _motor2->driveCmd( (int)newDrive, FORWARD);
+            _motor1->driveCmd( (int)newDrive, _direction);
+            _motor2->driveCmd( (int)newDrive, _direction);
         }
     }
 

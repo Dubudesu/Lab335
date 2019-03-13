@@ -15,6 +15,7 @@ class SpeedControl {
         Motor       *_motor2;
 
         double      _setPoint;
+        int         _direction;
         double      _sampleTime;
         bool        _enable;
 
@@ -30,7 +31,7 @@ class SpeedControl {
     public:
         SpeedControl(HardwareSerial *port, Encoder *encoder, Motor *motor1, Motor *motor2, double sampleTime);
 		
-        void        setSpeed(double speed);
+        void        setSpeed(double speed, int direction);
         double      getspeed();
 
         void        enable();
