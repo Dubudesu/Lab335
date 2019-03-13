@@ -19,7 +19,6 @@ void RangeFinder::sendPing(){
     delayMicroseconds(10);
     digitalWrite(_outPin, LOW);
 
-    _port->print("ping");
     
 }
 

@@ -2,8 +2,8 @@
 #include <Arduino.h>
 #include <RangeFinder.h>
 
-unsigned int trigPin = 11;    // Trigger
-unsigned int echoPin = 3;    // Echo
+unsigned int trigPin = 23;    // Trigger
+unsigned int echoPin = 21;    // Echo
 
 volatile bool MEASURE_FLAG1 = false;
 volatile bool ISRflag = false;
@@ -13,14 +13,15 @@ RangeFinder  *disranger = new RangeFinder(echoPin, trigPin, &Serial);
 void setup() {
   //Serial Port begin
   Serial.begin (115200);
-  //Define inputs and outputs
 
+  //Counter setup for range finding
   noInterrupts();
   TCCR1A = 0;
   TCCR1B = 0;
   TCCR1B = _BV(CS12);    // prescaler of 256
   TCNT1  = 0;
   
+  //interrupt attached to the echoPin of the ultrasonic sensor
   attachInterrupt( digitalPinToInterrupt(echoPin), myISR, CHANGE );
   
   interrupts();
