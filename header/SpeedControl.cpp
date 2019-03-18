@@ -59,10 +59,10 @@ void SpeedControl::update(){
 
     double newDrive = -(iTerm + pTerm);
     
-    _serialPort->print("iTerm: ");
-    _serialPort->println(iTerm);
-    _serialPort->print("pTerm: ");
-    _serialPort->println(pTerm);
+    _serialPort->print(newDrive);
+    _serialPort->print(", ");
+    _serialPort->print(_error);
+    _serialPort->print("\r");
     newDrive = 255.0*newDrive;
 
     newDrive = (newDrive < 0.0) ? 0.0 : newDrive;
