@@ -102,5 +102,8 @@ void LineFollower::update(){
         default:
             break;
     }
+    _port->println(_state);
+    _leftController->update();
+    _rightController->update();
 
 }

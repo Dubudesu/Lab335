@@ -2,7 +2,7 @@
 #include <arduino.h>
 
 #define OPEN_ANGLE  0
-#define CLOSE_ANGLE 15
+#define CLOSE_ANGLE 20
 
 #define OPEN_POSN 1
 #define CLOSE_POSN 0

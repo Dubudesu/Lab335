@@ -7,6 +7,7 @@
 #include <Gripper.h>
 #include <RangeFinder.h>
 #include <LineFollower.h>
+#include <LineSensor.h>
 
 #include <Adafruit_MotorShield.h>
 
@@ -32,6 +33,9 @@ volatile bool pid_update_flag  = false;
 volatile int datFlag = 0;
 
 volatile bool MAZE_FLAG = false;
+volatile bool LINE_FLAG = true;
+volatile bool PID_FLAG = false;
+volatile bool MAN_FLAG = false;
 
 Adafruit_MotorShield AFMS = Adafruit_MotorShield();
 
@@ -47,6 +51,12 @@ Motor *rrMotor;
 
 SpeedControl *leftControler;
 SpeedControl *rightControler;
+
+unsigned int leftLSpin = 24;
+unsigned int rightLSpin = 25;
+
+LineSensor  *leftLS;
+LineSensor  *rightLS;
 
 /*------------RANGE FINDER-------------- */
 unsigned int trig1Pin = 23;    // Trigger
@@ -107,6 +117,9 @@ void setup(){
     
     rightEncoder   = new Encoder(&Serial, ENCODER_SLOTS, WHEEL_DIAMETER, RIGHT_ENCODER_PIN);
     leftEncoder    = new Encoder(&Serial, ENCODER_SLOTS, WHEEL_DIAMETER, LEFT_ENCODER_PIN);
+
+    leftLS         = new LineSensor(leftLSpin);    
+    rightLS        = new LineSensor(rightLSpin);
     
     leftEncoder->init();
     rightEncoder->init();
@@ -127,6 +140,14 @@ void setup(){
     rightControler->setSpeed(400.0, FORWARD, true);
     leftControler->update();
     rightControler->update();
+
+
+    daMaster = new LineFollower(leftControler, rightControler, leftLS, rightLS, frontRanger, &Serial);
+    
+    if(MAZE_FLAG) mazeStart();
+    if(LINE_FLAG) daMaster->enable();
+
+
 }
 
 void loop(){
@@ -169,18 +190,18 @@ void loop(){
         Serial.println("tankRight!");
         tankRight();
       }
+      else if(incomingByte == 't'){
+        LINE_FLAG = !LINE_FLAG;
+        if(LINE_FLAG){
+          Serial.println("LineGO!");
+          daMaster->enable();
+        }else{
+          Serial.println("LineNO!");
+           daMaster->disable();
+        }
+      }
     }
-  
-// send drive commands to each motor for simple motor run and speed feedback test
-// FORWARD 1, BACKWARD 2, BRAKE 3, RELEASE 4, #defined in Adafruit motor library
-//  static bool runningMotor = false;
-//  if(!runningMotor) {
-//    static unsigned int dir = 1;
-//    leftControler->setSpeed(100, FORWARD);
-//    rightControler->setSpeed(100, FORWARD);
-//  
-//    runningMotor = true;
-//  }
+
   if(timer4_capt_flag){
       timer4_capt_flag = false;
       timer4_over_flag = false;    
@@ -195,30 +216,35 @@ void loop(){
   }
   if(MEASURE_FLAG1 == true){
     MEASURE_FLAG1 = false;
-
     frontRanger->update( TCNT1 * 16 );
+    Serial.println(frontRanger->getDistance());
+    
     if(MAZE_FLAG){
-      if( frontRanger->getDistance() < 10.0){
-        Serial.println("STOP");
-        mazeStop();
+
+      if( frontRanger->getDistance() < 25.0){
+        if(leftRanger->getDistance() < 55.0 ){ //wall to the left, go right
+          Serial.println("RIGHT");
+          tankRight();
+        }else{
+          Serial.println("LEFT");
+          tankLeft();
+        }
+
+        
       }else{
         Serial.println("GO");
         mazeStart();
       }
+
     }
   }
   if(MEASURE_FLAG2 == true){
+
     MEASURE_FLAG2 = false;
-    
+
     leftRanger->update( TCNT1 * 16 );
-    if(MAZE_FLAG){
-      if( leftRanger->getDistance() < 50.0){
-        //Cant turn left, better turn right
-        Serial.print("distance: ");
-        Serial.print( leftRanger->getDistance() );
-        Serial.print("cm\n");
-      }
-    }
+    Serial.println(leftRanger->getDistance());
+
   }
 
 
@@ -228,8 +254,13 @@ void loop(){
     if(MAZE_FLAG){
 
       frontRanger->sendPing();
-    }else{
-      leftControler->update();
+      leftRanger->sendPing();
+
+    }else if(LINE_FLAG){
+      daMaster->update();
+    }
+    else{
+      //leftControler->update();
     }
 
   }
@@ -264,7 +295,7 @@ ISR(TIMER5_OVF_vect){
 
 void frontSensISR(){
     if( digitalRead(echo1Pin) == HIGH ){
-      TCNT1 = 0;
+
     }
     else if( digitalRead(echo1Pin) == LOW ){
       MEASURE_FLAG1 = true;
@@ -273,10 +304,12 @@ void frontSensISR(){
 
 void leftSensISR(){
     if( digitalRead(echo2Pin) == HIGH ){
-      TCNT1 = 0;
+
+
     }
     else if( digitalRead(echo2Pin) == LOW ){
       MEASURE_FLAG2 = true;
+
     }
 }
 
@@ -286,7 +319,7 @@ ISR(TIMER3_COMPB_vect){
 }
 
 void mazeStart(){
-    OCR3A  = 6250;    //100ms delay on timer3, used for sending pings on maze
+    //OCR3A  = 6250;    //100ms delay on timer3, used for sending pings on maze
     leftControler->enable();
     rightControler->enable();
   
@@ -316,13 +349,7 @@ void tankLeft(){
     leftControler->update();
     rightControler->update();
 
-    delay(900);
-    leftControler->disable();
-    rightControler->disable();
-    leftControler->setSpeed(0.0, BRAKE, false);
-    rightControler->setSpeed(0.0, BRAKE, false);
-    leftControler->update();
-    rightControler->update();
+    delay(840);
 }
 
 void tankRight(){
@@ -335,11 +362,5 @@ void tankRight(){
     leftControler->update();
     rightControler->update();
 
-    delay(900);
-    leftControler->disable();
-    rightControler->disable();
-    leftControler->setSpeed(0.0, BRAKE, false);
-    rightControler->setSpeed(0.0, BRAKE, false);
-    leftControler->update();
-    rightControler->update();
+    delay(800);
 }
