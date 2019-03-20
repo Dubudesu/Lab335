@@ -1,14 +1,14 @@
 #include "Gripper.h"
 #include <arduino.h>
 
-#define OPEN_ANGLE
-#define CLOSE ANGLE
+#define OPEN_ANGLE  0
+#define CLOSE_ANGLE 15
 
 #define OPEN_POSN 1
 #define CLOSE_POSN 0
 
 Gripper::Gripper (unsigned int pin) {
-    _gripper = new MegaServo;               // instantiate new MegaServo class instance
+    _gripper = new Servo;               // instantiate new MegaServo class instance
     _gripper->attach(pin,800,2200);         // 
     _gripper->write(OPEN_ANGLE);            // drive the gripper open on power up
     _posn = OPEN_POSN;                      // set gripper position to open

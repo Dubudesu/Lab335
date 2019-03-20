@@ -7,7 +7,7 @@ class Gripper {
     private:
         bool _posn;                 // Current gripper position
         
-        MegaServo _gripper;         // MegaServo object instance
+        Servo *_gripper;         // MegaServo object instance
         
     
     public:

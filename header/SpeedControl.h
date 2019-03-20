@@ -28,10 +28,12 @@ class SpeedControl {
         double      _gainIntegral;
         double      _integratorLimit;
 
+        bool        _useCntrl;
+
     public:
         SpeedControl(HardwareSerial *port, Encoder *encoder, Motor *motor1, Motor *motor2, double sampleTime);
 		
-        void        setSpeed(double speed, int direction);
+        void        setSpeed(double speed, int direction, bool useCntrl );
         double      getspeed();
 
         void        enable();

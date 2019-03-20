@@ -16,9 +16,10 @@ private:
   unsigned int      _slots;             // number of slots in the encoder wheel used
   unsigned int      _diameter;          // diameter of the robot wheel assoicated with this encoder
   unsigned int      _pin;               // timer interrupt pin used for this encoder
+  HardwareSerial    *_port;
 
 public:
-  Encoder(unsigned int slots, unsigned int diameter, unsigned int pin);
+  Encoder(HardwareSerial *port, unsigned int slots, unsigned int diameter, unsigned int pin);
   void init();
   double updateTime(unsigned int time); // calculate and return current wheen speed
   double getSpeed(); // return current wheel speed

@@ -3,7 +3,8 @@
 
 #define COUNT_MAX   65535 // maximum value for the timer/counter register used.
 
-Encoder::Encoder(unsigned int slots, unsigned int diameter, unsigned int pin) {
+Encoder::Encoder(HardwareSerial *port, unsigned int slots, unsigned int diameter, unsigned int pin) {
+    _port              = port;
     _speed             = 0.0;
     _currentTime       = 0;
     _prevTime          = 0;
@@ -12,7 +13,7 @@ Encoder::Encoder(unsigned int slots, unsigned int diameter, unsigned int pin) {
     _diameter          = diameter;
     _pin			   = pin;
     _tick              = 0.000004;                          //seconds per tick at 64 prescaller
-    _mmPerSlot         = (350/_slots)*((PI*_diameter)/360);  // (degrees per slot) * (mm per degree)
+    _mmPerSlot         = (360/_slots)*((PI*_diameter)/360);  // (degrees per slot) * (mm per degree)
 }
 
 //call on interupt flag with time
@@ -24,7 +25,7 @@ double Encoder::updateTime(unsigned int time) {
 
     // Time difference between samples. used long to ensure no register overflows
     unsigned long timediff = 0; 
-
+    timediff = _currentTime - _prevTime;
     //Check for overflow between samples, and compensate if needed
     if(_currentTime >= _prevTime){
         timediff = _currentTime - _prevTime;

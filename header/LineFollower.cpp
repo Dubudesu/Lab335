@@ -13,7 +13,7 @@ LineFollower::LineFollower(SpeedControl *lc, SpeedControl *rc, LineSensor *ls, L
     _state              = S_IDLE;
     _enable             = false;
 
-    _cruiseSpeed        = 100.0;    //  base move speed in mm/s
+    _cruiseSpeed        = 80.0;    //  base move speed in Motor PWM
 }
 void LineFollower::enable(){
     _enable = true;
@@ -37,8 +37,8 @@ void LineFollower::update(){
                 
                 if( !l_sensor && !r_sensor ){
 
-                    _leftController->setSpeed(_cruiseSpeed, 1);
-                    _rightController->setSpeed(_cruiseSpeed, 1);
+                    _leftController->setSpeed(_cruiseSpeed, 1, false);
+                    _rightController->setSpeed(_cruiseSpeed, 1, false);
                     _state = S_DRIVE;
                 }
                 else{
@@ -53,24 +53,24 @@ void LineFollower::update(){
             if(_enable){
                 
                 if( !l_sensor && !r_sensor ){  //if this happens, we goin too fast
-                    _leftController->setSpeed(0.0, 1);
-                    _rightController->setSpeed(0.0, 1);
+                    _leftController->setSpeed(0.0, 1, false);
+                    _rightController->setSpeed(0.0, 1, false);
                     _state = S_IDLE;
                     _enable = false;
                 }
                 else if(!l_sensor){ //left sensor off tape -> turn right
-                    _rightController->setSpeed(0.0, 1);
+                    _rightController->setSpeed(0.0, 1, false);
                     _state = S_LEFT;
                 }
                 else if(!r_sensor){ //right sensor off tape -> turn left
-                    _leftController->setSpeed(0.0, 1);
+                    _leftController->setSpeed(0.0, 1, false);
                     _state = S_RIGHT;
                 }
                 
             }
             else{
-                _leftController->setSpeed(0.0, 1);
-                _rightController->setSpeed(0.0, 1);
+                _leftController->setSpeed(0.0, 1, false);
+                _rightController->setSpeed(0.0, 1, false);
                 _state = S_IDLE;
                 _enable = false;
             }
@@ -79,8 +79,8 @@ void LineFollower::update(){
         case S_LEFT:
 
             if( !l_sensor && !r_sensor ){ //back on course go straight
-                _leftController->setSpeed(_cruiseSpeed, 1);
-                _rightController->setSpeed(_cruiseSpeed, 1);
+                _leftController->setSpeed(_cruiseSpeed, 1, false);
+                _rightController->setSpeed(_cruiseSpeed, 1, false);
                 _state = S_DRIVE;
             }
 
@@ -89,8 +89,8 @@ void LineFollower::update(){
 
 
             if( !l_sensor && !r_sensor ){ //back on course go straight
-                _leftController->setSpeed(_cruiseSpeed, 1);
-                _rightController->setSpeed(_cruiseSpeed, 1);
+                _leftController->setSpeed(_cruiseSpeed, 1, false);
+                _rightController->setSpeed(_cruiseSpeed, 1, false);
                 _state = S_DRIVE;
             }
 
