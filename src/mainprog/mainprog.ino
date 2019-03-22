@@ -28,10 +28,15 @@ volatile bool timer4_over_flag = false;
 volatile bool timer5_capt_flag = false;
 volatile bool timer5_over_flag = false;
 
-volatile bool pid_update_flag  = false;
+
 
 volatile int datFlag = 0;
 
+volatile unsigned int t2OVFcnt = 0;
+volatile bool distance_ping = false;
+volatile bool pid_update_flag  = false;
+
+//Control Flags
 volatile bool MAZE_FLAG = false;
 volatile bool LINE_FLAG = true;
 volatile bool PID_FLAG = false;
@@ -65,14 +70,17 @@ unsigned int echo1Pin = 19;    // Echo
 unsigned int echo2Pin = 18; 
 
 volatile bool MEASURE_FLAG1 = false;
+volatile bool UPDATE_FLAG1 = false;
 volatile bool MEASURE_FLAG2 = false;
+volatile bool UPDATE_FLAG2 = false;
+
+volatile int rangeSanityCheck = 0;
 
 volatile bool ISR1flag = false;
 volatile bool ISR2flag = false;
 
 RangeFinder  *frontRanger = new RangeFinder(echo1Pin, trig1Pin, &Serial);
 RangeFinder  *leftRanger = new RangeFinder(echo2Pin, trig2Pin, &Serial);
-
 /*------------RANGE FINDER-------------- */
 
 LineFollower *daMaster;
@@ -99,16 +107,23 @@ void setup(){
     TIMSK5 = B00100001; // Interrupt on Timer 4 overflow and input capture
     TCNT5 =  0;          // Set counter to zero
 
-    TCCR3A = 0; 
-    TCCR3B = B00001100; // CTC Mode - 256 prescaler = 16us per tick
-    TIMSK3 = B00000100; // Compare match vector B
-    OCR3A  = 6250;      // 6250 * 16µs = 100ms, 1250 = 20ms
-    TCNT3  = 0;
+    //PID counter
+    TCCR2A = 0; 
+    TCCR2B = B00000100; // 256 prescaler = 16us per tick
+    TIMSK2 = B00000001; // Overflow vector enable
+    TCNT2  = 0;
 
+    //Front sensor counter
     TCCR1A = 0;
     TCCR1B = 0;
     TCCR1B = _BV(CS12);    // prescaler of 256
     TCNT1  = 0;
+
+    //Left sensor counter
+    TCCR3A = 0;
+    TCCR3B = 0;
+    TCCR3B = _BV(CS32);    // prescaler of 256
+    TCNT3  = 0;
 
     attachInterrupt( digitalPinToInterrupt(echo1Pin), frontSensISR, CHANGE );
     attachInterrupt( digitalPinToInterrupt(echo2Pin), leftSensISR, CHANGE );
@@ -136,16 +151,16 @@ void setup(){
     leftControler->disable();
     rightControler->disable();
   
-    leftControler->setSpeed(400.0, BACKWARD, true);
-    rightControler->setSpeed(400.0, FORWARD, true);
+    leftControler->setSpeed(0.0, FORWARD, false);
+    rightControler->setSpeed(0.0, FORWARD, false);
     leftControler->update();
     rightControler->update();
 
 
     daMaster = new LineFollower(leftControler, rightControler, leftLS, rightLS, frontRanger, &Serial);
     
-    if(MAZE_FLAG) mazeStart();
-    if(LINE_FLAG) daMaster->enable();
+    //if(MAZE_FLAG) mazeStart();
+    //if(LINE_FLAG) daMaster->enable();
 
 
 }
@@ -197,7 +212,11 @@ void loop(){
           daMaster->enable();
         }else{
           Serial.println("LineNO!");
-           daMaster->disable();
+            leftControler->setSpeed(0.0, BACKWARD, false);
+            rightControler->setSpeed(0.0, FORWARD, false);
+            leftControler->update();
+            rightControler->update();
+            daMaster->disable();
         }
       }
     }
@@ -214,57 +233,52 @@ void loop(){
       rightEncoder->updateTime(ICR5);
 
   }
+  //Front range finder update
   if(MEASURE_FLAG1 == true){
     MEASURE_FLAG1 = false;
+    UPDATE_FLAG1  = true;
     frontRanger->update( TCNT1 * 16 );
     Serial.println(frontRanger->getDistance());
-    
-    if(MAZE_FLAG){
-
-      if( frontRanger->getDistance() < 25.0){
-        if(leftRanger->getDistance() < 55.0 ){ //wall to the left, go right
-          Serial.println("RIGHT");
-          tankRight();
-        }else{
-          Serial.println("LEFT");
-          tankLeft();
-        }
-
-        
-      }else{
-        Serial.println("GO");
-        mazeStart();
-      }
-
-    }
   }
+  //Left range finder update
   if(MEASURE_FLAG2 == true){
-
     MEASURE_FLAG2 = false;
-
-    leftRanger->update( TCNT1 * 16 );
-    Serial.println(leftRanger->getDistance());
-
+    UPDATE_FLAG2  = true;
+    leftRanger->update( TCNT3 * 16 );
   }
 
 
+  if(distance_ping){
+    distance_ping = false;
+    frontRanger->sendPing();
+    //leftRanger->sendPing();
+    //Serial.println("ping");
+  }
   if(pid_update_flag){
-    pid_update_flag = false;
-
+      pid_update_flag = false;
     if(MAZE_FLAG){
-
-      frontRanger->sendPing();
-      leftRanger->sendPing();
-
-    }else if(LINE_FLAG){
-      daMaster->update();
+      mazeUpdate();
     }
-    else{
-      //leftControler->update();
+    if(LINE_FLAG){
+      daMaster->enable();
+      daMaster->update(65.0);
     }
-
   }
-  
+
+
+}
+
+ISR(TIMER2_OVF_vect){
+  if(t2OVFcnt%500 == 0){   //ping for distance 500* 4µs times per second
+    distance_ping = true;
+  }
+  if(t2OVFcnt%80 == 0 ){   //update pid/linefollower 50 times per second
+    pid_update_flag = true; 
+  }
+  if(t2OVFcnt == 1600){
+    t2OVFcnt = 0;
+  }
+  t2OVFcnt++;
 }
 
 ISR(TIMER4_CAPT_vect){
@@ -295,7 +309,7 @@ ISR(TIMER5_OVF_vect){
 
 void frontSensISR(){
     if( digitalRead(echo1Pin) == HIGH ){
-
+      TCNT1 = 0;
     }
     else if( digitalRead(echo1Pin) == LOW ){
       MEASURE_FLAG1 = true;
@@ -304,8 +318,7 @@ void frontSensISR(){
 
 void leftSensISR(){
     if( digitalRead(echo2Pin) == HIGH ){
-
-
+      TCNT3 = 0;
     }
     else if( digitalRead(echo2Pin) == LOW ){
       MEASURE_FLAG2 = true;
@@ -313,20 +326,18 @@ void leftSensISR(){
     }
 }
 
-
-ISR(TIMER3_COMPB_vect){
-  pid_update_flag = true;
-}
-
 void mazeStart(){
-    //OCR3A  = 6250;    //100ms delay on timer3, used for sending pings on maze
-    leftControler->enable();
-    rightControler->enable();
-  
-    leftControler->setSpeed(100.0, FORWARD, false);
-    rightControler->setSpeed(100.0, FORWARD, false);
-    leftControler->update();
-    rightControler->update();
+    
+    if(UPDATE_FLAG1){
+      UPDATE_FLAG1 = false;
+      leftControler->enable();
+      rightControler->enable();
+    
+      leftControler->setSpeed(120.0, FORWARD, false);
+      rightControler->setSpeed(120.0, FORWARD, false);
+      leftControler->update();
+      rightControler->update();
+    }
 }
 
 void mazeStop(){
@@ -339,28 +350,64 @@ void mazeStop(){
     rightControler->update(); 
 }
 
+void mazeUpdate(){
+  
+//    Serial.print("Left: ");
+//    Serial.print( leftRanger->getDistance() );
+//    Serial.print("  Front: ");
+//    Serial.println( frontRanger->getDistance() );
+
+    double fr = frontRanger->getDistance();
+    double lr = leftRanger->getDistance();
+
+    if(fr > 30.0){
+      mazeStart();
+    }else if(fr < 30.0){
+      mazeStop();
+      if(lr < 55.0){
+        tankRight();
+        mazeStop();
+      }else if(lr > 55.0){
+        tankLeft();
+        mazeStop();
+      }
+    }
+}
+
 void tankLeft(){
 
-    leftControler->enable();
-    rightControler->enable();
+    if(UPDATE_FLAG1){
+      UPDATE_FLAG1 = false;
+      Serial.println("tankLeft");
+      leftControler->enable();
+      rightControler->enable();
+    
+      leftControler->setSpeed(100.0, BACKWARD, false);
+      rightControler->setSpeed(100.0, FORWARD, false);
+      leftControler->update();
+      rightControler->update();
   
-    leftControler->setSpeed(100.0, BACKWARD, false);
-    rightControler->setSpeed(100.0, FORWARD, false);
-    leftControler->update();
-    rightControler->update();
-
-    delay(840);
+      delay(825);
+      
+    }
+    //mazeStop();
 }
 
 void tankRight(){
 
-    leftControler->enable();
-    rightControler->enable();
+    if(UPDATE_FLAG1){
+      UPDATE_FLAG1 = false;
+      Serial.println("tankRight");
+      leftControler->enable();
+      rightControler->enable();
+    
+      leftControler->setSpeed(100.0, FORWARD, false);
+      rightControler->setSpeed(100.0, BACKWARD, false);
+      leftControler->update();
+      rightControler->update();
   
-    leftControler->setSpeed(100.0, FORWARD, false);
-    rightControler->setSpeed(100.0, BACKWARD, false);
-    leftControler->update();
-    rightControler->update();
+      delay(750);
 
-    delay(800);
+    }
+    //mazeStop();
 }

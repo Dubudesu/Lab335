@@ -1,4 +1,5 @@
-#include <LineSensor.h>
+
+#include <LineFollower.h>
 
 unsigned int leftPin = 23;
 unsigned int rightPin = 22;

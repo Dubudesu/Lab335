@@ -18,7 +18,6 @@ void RangeFinder::sendPing(){
     digitalWrite(_outPin, HIGH);
     delayMicroseconds(10);
     digitalWrite(_outPin, LOW);
-    TCNT1 = 0;
     
 }
 

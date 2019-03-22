@@ -19,16 +19,19 @@ class LineFollower {
         HardwareSerial      *_port;
 
         double              _cruiseSpeed;
+        double              _stopDistance;
         state               _state;
+        state               _nextState;
 
         bool                _enable;
+        int                 _saneRange;
 
     public:
         LineFollower(SpeedControl *lc, SpeedControl *rc, LineSensor *ls, LineSensor *rs, RangeFinder *ranger, HardwareSerial *port);
 
         void enable();
         void disable();
-        void update();
+        void update(double speed);
         
 };
 
